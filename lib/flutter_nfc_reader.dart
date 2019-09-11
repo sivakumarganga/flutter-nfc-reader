@@ -50,6 +50,17 @@ class NfcData {
     }
     return result;
   }
+  @override
+  String toString() {
+    StringBuffer sb = new StringBuffer();
+    sb.writeln("{");
+    sb.writeln("  id:'" + this.id ?? "" + "',");
+    sb.writeln("  content:'" + this.content ?? "" + "',");
+    sb.writeln("  error:'" + this.error ?? "" + "',");
+    sb.writeln("  statusMapper:'" + this.statusMapper ?? "" + "'");
+    sb.writeln("}");
+    return sb.toString();
+  }
 }
 
 class FlutterNfcReader {
@@ -58,26 +69,39 @@ class FlutterNfcReader {
   static const stream =
       const EventChannel('it.matteocrippa.flutternfcreader.flutter_nfc_reader');
 
- static Future<NfcData>  stop() async{
+  static Future<NfcData> stop() async {
     final Map data = await _channel.invokeMethod('NfcStop');
     final NfcData result = NfcData.fromMap(data);
 
     return result;
   }
 
-  static Future<NfcData>  read() async{
-    final Map data = await _channel.invokeMethod('NfcRead');
-    final NfcData result = NfcData.fromMap(data);
-
-    return result;
+  static Future<NfcData> read() async {
+    try {
+      final Map data = await _channel.invokeMethod('NfcRead');
+      final NfcData result = NfcData.fromMap(data);
+      return result;
+    } on PlatformException catch (ex) {
+      return new NfcData(
+          error: ex.message,
+          statusMapper: 'error',
+          content: "Error! :" + (ex.message ?? ""));
+    }
   }
 
-  static Future<NfcData> write(String path,String label) async {
-    final Map data = await _channel.invokeMethod('NfcWrite',<String,dynamic>{'label':label,'path':path});
+  static Future<NfcData> write(String path, String label) async {
+    try {
+      final Map data = await _channel.invokeMethod(
+          'NfcWrite', <String, dynamic>{'label': label, 'path': path});
 
-    final NfcData result = NfcData.fromMap(data);
+      final NfcData result = NfcData.fromMap(data);
 
-    return result;
+      return result;
+    } on PlatformException catch (ex) {
+      return new NfcData(
+          error: ex.message,
+          statusMapper: 'error',
+          content: "Error! :" + (ex.message ?? ""));
+    }
   }
-
 }
